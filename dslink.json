@@ -1,0 +1,37 @@
+{
+  "name": "minecraft",
+  "version": "1.0.0",
+  "description": "Minecraft DSLink",
+  "license": "Apache",
+  "author": {
+    "name": "Logan Gorence",
+    "email": "loganjohngorence@gmail.com"
+  },
+  "engines": {
+    "java": ">=1.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IOT-DSA/dslink-java-minecraft"
+  },
+  "bugs": {
+    "url": "https://github.com/IOT-DSA/dslink-java-minecraft/issues"
+  },
+  "configs": {
+    "nodes": {
+      "type": "path",
+      "value": "nodes.json",
+      "required": true
+    },
+    "key": {
+      "type": "path",
+      "value": ".key",
+      "required": true
+    },
+    "log": {
+      "type": "enum",
+      "value": "info",
+      "required": true
+    }
+  }
+}
