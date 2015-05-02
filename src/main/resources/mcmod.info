@@ -1,0 +1,16 @@
+[
+{
+  "modid": "MinecraftDSLink",
+  "name": "MinecraftDSLink",
+  "description": "Minecraft DSLink",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["logangorence"],
+  "credits": "DSA",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
