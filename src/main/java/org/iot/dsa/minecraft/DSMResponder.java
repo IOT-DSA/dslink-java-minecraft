@@ -1,5 +1,7 @@
 package org.iot.dsa.minecraft;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldSettings;
 import org.dsa.iot.dslink.DSLink;
@@ -7,20 +9,20 @@ import org.dsa.iot.dslink.DSLinkHandler;
 import org.dsa.iot.dslink.node.Node;
 import org.dsa.iot.dslink.node.NodeBuilder;
 import org.dsa.iot.dslink.node.NodeManager;
+import org.dsa.iot.dslink.node.Permission;
+import org.dsa.iot.dslink.node.actions.Action;
+import org.dsa.iot.dslink.node.actions.ActionResult;
 import org.dsa.iot.dslink.node.value.Value;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
 
 public class DSMResponder extends DSLinkHandler {
 
     private static DSMResponder instance;
 
     private static Node blocksBrokenNode;
-    private static Node playerCountNode;
-    private static Node playerListNode;
+    private static Node playersNode;
     private static Node gamemodeNode;
     private static Node gamemodeIdNode;
-    private static Node entitiesKilledNode;
 
     public static DSMResponder instance() {
         if (instance == null) {
@@ -40,25 +42,16 @@ public class DSMResponder extends DSLinkHandler {
         blocksBroken.setConfig("type", new Value("int"));
         blocksBrokenNode = blocksBroken.build();
 
-        NodeBuilder playerCount = superRoot.createChild("playerCount");
-        playerCount.setConfig("type", new Value("int"));
-        playerCountNode = playerCount.build();
-
-        NodeBuilder playerList = superRoot.createChild("playerList");
-        playerList.setConfig("type", new Value("array"));
-        playerListNode = playerList.build();
+        NodeBuilder players = superRoot.createChild("players");
+        playersNode = players.build();
 
         NodeBuilder gamemode = superRoot.createChild("gamemode");
         gamemode.setConfig("type", new Value("string"));
         gamemodeNode = gamemode.build();
 
         NodeBuilder gamemodeId = superRoot.createChild("gamemodeId");
-        gamemode.setConfig("writable", new Value("write"));
+        gamemodeId.setConfig("writable", new Value("write"));
         gamemodeIdNode = gamemodeId.build();
-
-        /*NodeBuilder entitiesKilled = superRoot.createChild("entitiesKilled");
-        entitiesKilled.setConfig("type", new Value("int"));
-        entitiesKilledNode = entitiesKilled.build();*/
 
         gamemodeId.getListener().setValueHandler(new Handler<Value>() {
             @Override
@@ -70,26 +63,11 @@ public class DSMResponder extends DSLinkHandler {
         });
 
         updateBlocksBroken();
-        updatePlayerCount();
-        updatePlayerList();
         updateGamemode();
-        //updateEntitiesKilled();
     }
 
     public void updateBlocksBroken() {
         blocksBrokenNode.setValue(new Value(MinecraftDSLink.BLOCKS_BROKEN));
-    }
-
-    public void updatePlayerCount() {
-        playerCountNode.setValue(new Value(MinecraftDSLink.PLAYERS));
-    }
-
-    public void updatePlayerList() {
-        String[] playerList = new String[MinecraftServer.getServer().getGameProfiles().length];
-        for (int i = 0; i < MinecraftServer.getServer().getGameProfiles().length; i++) {
-            playerList[i] = MinecraftServer.getServer().getGameProfiles()[i].getName();
-        }
-        playerListNode.setValue(new Value(new JsonArray(playerList)));
     }
 
     public void updateGamemode() {
@@ -97,7 +75,23 @@ public class DSMResponder extends DSLinkHandler {
         gamemodeIdNode.setValue(new Value(MinecraftServer.getServer().getGameType().getID()));
     }
 
-    public void updateEntitiesKilled() {
-        //entitiesKilledNode.setValue(new Value(MinecraftDSLink.ENTITIES_KILLED));
+    public void addPlayer(final EntityPlayer player) {
+        NodeBuilder playernb = playersNode.createChild(player.getDisplayNameString());
+        Node playerNode = playernb.build();
+        NodeBuilder kicknb = playerNode.createChild("kick");
+        kicknb.setAction(new Action(Permission.NONE, new Handler<ActionResult>() {
+            @Override
+            public void handle(ActionResult event) {
+                ((EntityPlayerMP) player).playerNetServerHandler.kickPlayerFromServer("Kicked from server");
+            }
+        }));
+        Node kickNode = kicknb.build();
+        playerNode.addChild(kickNode);
+        playersNode.addChild(playerNode);
     }
+
+    public void removePlayer(EntityPlayer player) {
+        playersNode.removeChild(player.getDisplayNameString());
+    }
+
 }
